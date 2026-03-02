@@ -19,7 +19,12 @@ export const useGameEngine = () => {
   const [state, setState] = useState(() => hydrateState(progressRepository.load()));
   const [floaters, setFloaters] = useState([]);
   const audioRef = useRef(null);
+  const latestStateRef = useRef(state);
 
+
+  useEffect(() => {
+    latestStateRef.current = state;
+  }, [state]);
   const skillEffects = useMemo(() => {
     const effects = { click: 1, production: 1, all: 1, crit: 0, offline: 1 };
     SKILL_TREE.filter((n) => state.skillNodes.includes(n.id)).forEach((node) => {
@@ -267,9 +272,20 @@ export const useGameEngine = () => {
   }, [state]);
 
   useEffect(() => {
-    const saver = setInterval(() => progressRepository.save({ ...state, lastSave: Date.now(), lastTick: Date.now() }), 2000);
-    return () => clearInterval(saver);
-  }, [state]);
+    const persist = () => {
+      const snapshot = { ...latestStateRef.current, lastSave: Date.now(), lastTick: Date.now() };
+      progressRepository.save(snapshot);
+    };
+
+    const saver = setInterval(persist, 2000);
+    window.addEventListener('beforeunload', persist);
+
+    return () => {
+      clearInterval(saver);
+      window.removeEventListener('beforeunload', persist);
+      persist();
+    };
+  }, []);
 
   return {
     state,

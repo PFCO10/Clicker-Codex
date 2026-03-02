@@ -1,13 +1,18 @@
 const KEY = 'neon-idle-forge-save-v1';
 
 export const saveGame = (state) => {
-  localStorage.setItem(KEY, JSON.stringify(state));
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 export const loadGame = () => {
-  const raw = localStorage.getItem(KEY);
-  if (!raw) return null;
   try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return null;
     return JSON.parse(raw);
   } catch {
     return null;
