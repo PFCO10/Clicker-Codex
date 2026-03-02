@@ -292,6 +292,7 @@ export const useGameEngine = () => {
     floaters,
     cps,
     clickValueBase,
+    minUpgradeCost,
     clickCore,
     buyGenerator,
     buyUpgrade,

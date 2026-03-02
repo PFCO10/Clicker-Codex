@@ -10,6 +10,7 @@ function App() {
     floaters,
     cps,
     clickValueBase,
+    minUpgradeCost,
     clickCore,
     buyGenerator,
     buyUpgrade,
@@ -25,6 +26,11 @@ function App() {
   const tier = useMemo(() => tiers.filter((t) => state.lifetimeCurrency >= t).length - 1, [state.lifetimeCurrency]);
   const canPrestige = Math.floor(Math.pow(state.lifetimeCurrency / 50000, 0.42)) >= 1;
   const availablePrestige = state.prestigePoints - state.spentPrestige;
+
+  const currentRebirthGain = Math.floor(Math.pow(state.lifetimeCurrency / 50000, 0.42));
+  const nextRebirthTarget = 50000 * Math.pow(currentRebirthGain + 1, 1 / 0.42);
+  const rebirthProgress = Math.min(100, (state.lifetimeCurrency / nextRebirthTarget) * 100);
+  const economyProgress = Math.min(100, (state.currency / Math.max(1, minUpgradeCost)) * 100);
 
   const onClick = () => {
     clickCore();
@@ -60,10 +66,34 @@ function App() {
           <div className="buttons-row">
             <button onClick={claimDaily}>Daily Reward (streak {state.daily.streak})</button>
             <button onClick={prestige} disabled={!canPrestige}>
-              Rebirth (+{Math.floor(Math.pow(state.lifetimeCurrency / 50000, 0.42))} cores)
+              Rebirth (+{currentRebirthGain} cores)
             </button>
           </div>
           {state.randomEvent && <div className="event-banner">{state.randomEvent.label}</div>}
+
+          <div className="status-bars">
+            <div className="progress-wrap" title="Lifetime currency progress toward next rebirth core">
+              <div className="progress-head">
+                <span>Rebirth Progress</span>
+                <span>{rebirthProgress.toFixed(1)}%</span>
+              </div>
+              <div className="progress-track">
+                <div className="progress-fill" style={{ width: `${rebirthProgress}%` }}></div>
+              </div>
+              <small>{format(state.lifetimeCurrency)} / {format(nextRebirthTarget)} lifetime flux</small>
+            </div>
+            <div className="progress-wrap" title="Current currency versus the next cheapest purchase">
+              <div className="progress-head">
+                <span>Economy Readiness</span>
+                <span>{economyProgress.toFixed(1)}%</span>
+              </div>
+              <div className="progress-track">
+                <div className="progress-fill alt" style={{ width: `${economyProgress}%` }}></div>
+              </div>
+              <small>{format(state.currency)} / {format(minUpgradeCost)} next threshold</small>
+            </div>
+          </div>
+
           <div className="theme-pills">
             {Object.entries(THEMES).map(([id, theme]) => (
               <button key={id} className={id === state.theme ? 'active' : ''} onClick={() => setTheme(id)}>
